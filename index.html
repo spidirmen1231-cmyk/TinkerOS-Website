@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TinkerOS | Community Portal</title>
+    <style>
+        :root {
+            --primary: #ff6600;
+            --primary-soft: rgba(255, 102, 0, 0.2);
+            --bg: #0a0a0a;
+            --card-bg: #161616;
+            --text: #ffffff;
+            --yt-red: #ff0000;
+        }
+
+        html { scroll-behavior: smooth; }
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            overflow: hidden; 
+        }
+
+        /* --- AUTH SYSTEM --- */
+        #auth-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(0,0,0,0.9), rgba(0,0,0,0.9)), url('tinkeros.jpeg');
+            background-size: cover; background-position: center;
+            display: flex; justify-content: center; align-items: center;
+            z-index: 10000; transition: 0.8s;
+        }
+        .auth-card {
+            background: rgba(22, 22, 22, 0.95); padding: 40px; border-radius: 20px; border: 1px solid var(--primary);
+            text-align: center; backdrop-filter: blur(10px); width: 380px; box-shadow: 0 0 40px rgba(255, 102, 0, 0.2);
+        }
+        input { width: 100%; padding: 12px; margin: 10px 0; background: #111; border: 1px solid #333; color: white; border-radius: 8px; outline: none; box-sizing: border-box; }
+        .btn-auth { width: 100%; padding: 14px; background: var(--primary); border: none; color: white; font-weight: bold; cursor: pointer; border-radius: 8px; margin-top: 10px; }
+
+        /* --- NAVIGATION --- */
+        nav {
+            position: fixed; top: 0; width: 100%; display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 40px; background: rgba(0,0,0,0.9); z-index: 1000; box-sizing: border-box; border-bottom: 1px solid #222;
+        }
+        .nav-links { display: flex; gap: 15px; align-items: center; }
+        .nav-links a { color: white; text-decoration: none; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; transition: 0.3s; }
+        .nav-links a:hover { color: var(--primary); }
+
+        .user-profile { display: flex; align-items: center; gap: 10px; background: rgba(255,102,0,0.1); padding: 5px 12px; border-radius: 50px; border: 1px solid var(--primary); }
+        .ubuntu-logo { width: 20px; height: 20px; background: url('https://upload.wikimedia.org/wikipedia/commons/a/ab/Logo-ubuntu_coco.png') no-repeat center; background-size: contain; }
+
+        /* --- CONTENT SECTIONS --- */
+        #main-content { display: none; opacity: 0; transition: 1s; }
+        header { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('tinkeros.jpeg'); background-size: cover; background-position: center; }
+        .section { padding: 80px 20px; text-align: center; border-bottom: 1px solid #111; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; max-width: 1200px; margin: 40px auto; }
+        .card { background: var(--card-bg); padding: 30px; border-radius: 15px; border-left: 4px solid var(--primary); text-align: left; transition: 0.3s; }
+        .card:hover { transform: scale(1.02); background: #1a1a1a; }
+
+        /* --- ROADMAP --- */
+        .roadmap-container { display: flex; flex-direction: column; gap: 15px; max-width: 800px; margin: 0 auto; }
+        .roadmap-item { display: flex; align-items: center; gap: 20px; background: #111; padding: 20px; border-radius: 12px; border-right: 4px solid var(--primary); text-align: left; }
+        .roadmap-date { font-weight: bold; color: var(--primary); min-width: 120px; }
+
+        /* --- TERMINAL --- */
+        .terminal-box { background: #000; color: #0f0; font-family: 'Courier New', monospace; padding: 20px; border-radius: 10px; border: 1px solid #333; max-width: 700px; margin: 0 auto; text-align: left; }
+        
+        /* --- CONTRIBUTORS --- */
+        .contributor-badge { background: #111; padding: 20px; border-radius: 50px; border: 1px solid #333; transition: 0.3s; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .contributor-badge:hover { border-color: var(--primary); transform: translateY(-5px); }
+
+        footer { padding: 40px; background: #000; text-align: center; border-top: 1px solid #222; }
+    </style>
+</head>
+<body>
+
+    <div id="auth-overlay">
+        <div class="auth-card" id="login-form">
+            <h2 style="color:var(--primary)">TINKEROS PORTAL</h2>
+            <input type="text" id="login-user" placeholder="Kullanıcı Adı">
+            <input type="password" id="login-pass" placeholder="Şifre">
+            <button class="btn-auth" onclick="handleLogin()">GİRİŞ YAP</button>
+            <p onclick="showRegister()" style="cursor:pointer; font-size:0.8rem; color:#888; margin-top:15px;">Hesabın mı yok? <span style="color:var(--primary)">Kayıt Ol</span></p>
+        </div>
+
+        <div class="auth-card" id="register-form" style="display: none;">
+            <h2 style="color:var(--primary)">YENİ HESAP</h2>
+            <div id="reg-step-1">
+                <input type="email" id="reg-email" placeholder="E-posta">
+                <input type="text" id="reg-username" placeholder="Kullanıcı Adı Seç">
+                <button class="btn-auth" onclick="sendOTP()">KOD GÖNDER</button>
+                <p onclick="showLogin()" style="cursor:pointer; font-size:0.8rem; color:#888; margin-top:15px;">Zaten üye misin? <span style="color:var(--primary)">Giriş Yap</span></p>
+            </div>
+            <div id="reg-step-2" style="display: none;">
+                <p style="font-size: 0.8rem;">Doğrulama Kodu: 123456</p>
+                <input type="text" id="otp-input" placeholder="6 Haneli Kod">
+                <button class="btn-auth" onclick="verifyOTP()">DOĞRULA VE GİRİŞ YAP</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="main-content">
+        <nav>
+            <div style="font-size: 1.2rem; font-weight: bold; color: var(--primary);">TINKER OS</div>
+            <div class="nav-links">
+                <a href="#about">Özellikler</a>
+                <a href="#philosophy">Neden Linux?</a>
+                <a href="#roadmap">Yol Haritası</a>
+                <a href="#terminal">Terminal</a>
+                <a href="#contributors">Ekip</a>
+                <a href="https://www.youtube.com/@TinkerOS26" target="_blank" style="color:var(--yt-red)">YouTube</a>
+            </div>
+            <div class="user-profile">
+                <span id="display-name" style="font-size: 0.8rem; font-weight: bold;">Misafir</span>
+                <div class="ubuntu-logo"></div>
+                <button onclick="logout()" style="background:none; border:none; color:var(--primary); cursor:pointer; font-size:0.7rem; margin-left:5px;">[Çıkış]</button>
+            </div>
+        </nav>
+
+        <header>
+            <h1 style="font-size: 5rem; color: var(--primary); margin: 0; letter-spacing: 5px;">TINKER OS</h1>
+            <p style="font-size: 1.5rem;">4K Aesthetic Linux Experience</p>
+            <a href="#download" style="background: var(--primary); color: white; padding: 18px 50px; text-decoration: none; border-radius: 50px; font-weight: bold; margin-top: 30px; display: inline-block;">v1.0 BETA İNDİR</a>
+        </header>
+
+        <section id="about" class="section">
+            <h2 style="color:var(--primary)">Sistem Özellikleri</h2>
+            <div class="grid">
+                <div class="card"><h3>4K UI</h3><p>TinkerOS, en yüksek çözünürlüklü ekranlarda bile keskin ve net bir deneyim sunar.</p></div>
+                <div class="card"><h3>Fastfetch</h3><p>Sistem bilgilerini terminalde şık bir logoyla anında görüntüleyin.</p></div>
+                <div class="card"><h3>Ubuntu Tabanı</h3><p>Güvenilir, kararlı ve milyonlarca uygulama desteğiyle uyumlu altyapı.</p></div>
+            </div>
+        </section>
+
+        <section id="philosophy" class="section" style="background: #111;">
+            <h2 style="color: var(--primary)">Neden Linux & Ubuntu?</h2>
+            <div style="max-width: 900px; margin: 0 auto; text-align: left;">
+                <div class="card" style="border-left: none; border-right: 5px solid var(--primary); text-align: right;">
+                    <h3>Özgürlük</h3>
+                    <p>Kontrolün tamamen sizde olduğu, kısıtlamaların olmadığı bir dünya.</p>
+                </div>
+                <div class="card" style="margin-top: 20px;">
+                    <h3>Stabilite</h3>
+                    <p>Ubuntu tabanı sayesinde hata payı en aza indirilmiş, kaya gibi sağlam bir çekirdek.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="roadmap" class="section" style="background: #080808;">
+            <h2 style="color:var(--primary)">Yol Haritası</h2>
+            <div class="roadmap-container">
+                <div class="roadmap-item"><div class="roadmap-date">MAYIS 2026</div><div>v1.0 Beta Yayınlanması ve YouTube Kanalı Açılışı.</div></div>
+                <div class="roadmap-item"><div class="roadmap-date">HAZİRAN 2026</div><div>Özel APT Deposu (Repo) Kurulumu.</div></div>
+                <div class="roadmap-item"><div class="roadmap-date">AĞUSTOS 2026</div><div>v1.1: Yeni Tinker-Shell Arayüz Tanıtımı.</div></div>
+            </div>
+        </section>
+
+        <section id="terminal" class="section">
+            <h2 style="color:var(--primary)">Canlı Terminal</h2>
+            <div class="terminal-box" onclick="document.getElementById('term-input').focus()">
+                <div id="term-res">tinkeros@community:~$ </div>
+                <input type="text" id="term-input" style="background:transparent; border:none; color:#0f0; outline:none; font-family:inherit; width:100%;">
+            </div>
+        </section>
+
+        <section id="contributors" class="section" style="background: #080808;">
+            <h2 style="color:var(--primary)">Ekip</h2>
+            <div class="grid" style="max-width: 600px;">
+                <div class="contributor-badge">
+                    <h3 style="margin:0; color:var(--primary)">Utku</h3>
+                    <p style="margin:0; font-size:0.8rem; color:#888;">Geliştirici</p>
+                </div>
+                <div class="contributor-badge">
+                    <h3 style="margin:0; color:var(--primary)">Sınıf Arkadaşım</h3>
+                    <p style="margin:0; font-size:0.8rem; color:#888;">Tasarımcı</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="download" class="section" style="background: linear-gradient(0deg, #000, #0a0a0a);">
+            <h2>İndirme</h2>
+            <div style="border: 2px dashed var(--primary); padding: 40px; border-radius: 20px; display: inline-block;">
+                <a href="ISO_LINKI_BURAYA" style="background: var(--primary); color: white; padding: 15px 40px; text-decoration: none; border-radius: 10px; font-weight: bold; display: inline-block;">ISO İNDİR (6.5 GB)</a>
+            </div>
+        </section>
+
+        <footer>
+            <p>&copy; 2026 TinkerOS | <a href="https://www.youtube.com/@TinkerOS26" style="color:var(--yt-red)">YouTube</a></p>
+        </footer>
+    </div>
+
+    <script>
+        // --- OTOMATİK GİRİŞ KONTROLÜ ---
+        window.onload = function() {
+            const savedUser = localStorage.getItem('tinkeros_user');
+            if(savedUser) {
+                finishAuth(savedUser, true); // true = sessiz giriş
+            }
+        };
+
+        function showRegister() { document.getElementById('login-form').style.display='none'; document.getElementById('register-form').style.display='block'; }
+        function showLogin() { document.getElementById('register-form').style.display='none'; document.getElementById('login-form').style.display='block'; }
+        function sendOTP() { if(document.getElementById('reg-email').value) { alert("Kod: 123456"); document.getElementById('reg-step-1').style.display='none'; document.getElementById('reg-step-2').style.display='block'; }}
+        function verifyOTP() { if(document.getElementById('otp-input').value==="123456") finishAuth(document.getElementById('reg-username').value); }
+        function handleLogin() { const u=document.getElementById('login-user').value; if(u) finishAuth(u); }
+        
+        function finishAuth(n, silent = false) {
+            localStorage.setItem('tinkeros_user', n); // Kullanıcıyı kaydet
+            document.getElementById('display-name').innerText = n;
+            const overlay = document.getElementById('auth-overlay');
+            const main = document.getElementById('main-content');
+            
+            if(silent) {
+                overlay.style.display = 'none';
+                main.style.display = 'block';
+                main.style.opacity = '1';
+                document.body.style.overflow = 'auto';
+            } else {
+                overlay.style.opacity = '0';
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    main.style.display = 'block';
+                    document.body.style.overflow = 'auto';
+                    setTimeout(() => document.getElementById('main-content').style.opacity='1', 50);
+                }, 800);
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('tinkeros_user');
+            location.reload(); // Sayfayı yenile ve girişe dön
+        }
+
+        const tInput = document.getElementById('term-input');
+        const tRes = document.getElementById('term-res');
+        tInput.addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') {
+                const val = tInput.value.toLowerCase();
+                if(val === 'fastfetch') {
+                    tRes.innerHTML += val + "<br><span style='color:#ff6600'>OS: TinkerOS<br>Kernel: 7.0<br>Team: Utku & Sınıf Arkadaşım</span><br>tinkeros@community:~$ ";
+                } else { tRes.innerHTML += val + "<br>Komut yok.<br>tinkeros@community:~$ "; }
+                tInput.value = '';
+            }
+        });
+    </script>
+</body>
+</html>
